@@ -54,6 +54,8 @@ module "test" {
   location            = azurerm_resource_group.this.location
   name                = module.naming.api_management.name_unique
   resource_group_name = azurerm_resource_group.this.name
-
-  enable_telemetry = var.enable_telemetry # see variables.tf
+  publisher_name      = "Your Publisher Name"
+  sku_name            = "Developer" # or another valid SKU
+  publisher_email     = "publisher@example.com"
+  enable_telemetry    = var.enable_telemetry # see variables.tf
 }
