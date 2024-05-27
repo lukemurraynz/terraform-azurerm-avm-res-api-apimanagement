@@ -6,13 +6,11 @@ variable "location" {
 
 variable "name" {
   type        = string
-  description = "The name of the this resource."
+  description = "The name of this resource."
 
   validation {
-    condition     = can(regex("TODO", var.name))
-    error_message = "The name must be TODO." # TODO remove the example below once complete:
-    #condition     = can(regex("^[a-z0-9]{5,50}$", var.name))
-    #error_message = "The name must be between 5 and 50 characters long and can only contain lowercase letters and numbers."
+    condition     = can(regex("^[a-zA-Z]([a-zA-Z0-9-_.()]{0,48}[a-zA-Z0-9()])?$", var.name))
+    error_message = "The name must be between 1 and 50 characters long, start with a letter, end with a letter or digit, and can only contain letters, digits, hyphens (-), underscores (_), parentheses ((, )), and periods (.)."
   }
 }
 
@@ -355,15 +353,24 @@ variable "private_endpoints_manage_dns_zone_group" {
 
 variable "private_endpoints" {
   type = map(object({
-    name               = optional(string, null)
-    role_assignments   = optional(map(object({})), {}) # see https://azure.github.io/Azure-Verified-Modules/Azure-Verified-Modules/specs/shared/interfaces/#role-assignments
-    lock               = optional(object({}), {})      # see https://azure.github.io/Azure-Verified-Modules/Azure-Verified-Modules/specs/shared/interfaces/#resource-locks
-    tags               = optional(map(any), null)      # see https://azure.github.io/Azure-Verified-Modules/Azure-Verified-Modules/specs/shared/interfaces/#tags
-    subnet_resource_id = string
-    ## You only need to expose the subresource_name if there are multiple underlying services, e.g. storage.
-    ## Which has blob, file, etc.
-    ## If there is only one then leave this out and hardcode the value in the module.
-    # subresource_name                        = string
+    name = optional(string, null)
+    role_assignments = optional(map(object({
+      role_definition_id_or_name             = string
+      principal_id                           = string
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
+    })), {})
+    lock = optional(object({
+      kind = string
+      name = optional(string, null)
+    }), null)
+    tags                                    = optional(map(string), null)
+    subnet_resource_id                      = string
+    subresource_name                        = string
     private_dns_zone_group_name             = optional(string, "default")
     private_dns_zone_resource_ids           = optional(set(string), [])
     application_security_group_associations = optional(map(string), {})
@@ -377,79 +384,27 @@ variable "private_endpoints" {
     })), {})
   }))
   default     = {}
-  nullable    = false
   description = <<DESCRIPTION
-  A map of private endpoints to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-  
-  - `name` - (Optional) The name of the private endpoint. One will be generated if not set.
-  - `role_assignments` - (Optional) A map of role assignments to create on the private endpoint. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time. See `var.role_assignments` for more information.
-  - `lock` - (Optional) The lock level to apply to the private endpoint. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`.
-  - `tags` - (Optional) A mapping of tags to assign to the private endpoint.
-  - `subnet_resource_id` - The resource ID of the subnet to deploy the private endpoint in.
-  - `private_dns_zone_group_name` - (Optional) The name of the private DNS zone group. One will be generated if not set.
-  - `private_dns_zone_resource_ids` - (Optional) A set of resource IDs of private DNS zones to associate with the private endpoint. If not set, no zone groups will be created and the private endpoint will not be associated with any private DNS zones. DNS records must be managed external to this module.
-  - `application_security_group_resource_ids` - (Optional) A map of resource IDs of application security groups to associate with the private endpoint. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-  - `private_service_connection_name` - (Optional) The name of the private service connection. One will be generated if not set.
-  - `network_interface_name` - (Optional) The name of the network interface. One will be generated if not set.
-  - `location` - (Optional) The Azure location where the resources will be deployed. Defaults to the location of the resource group.
-  - `resource_group_name` - (Optional) The resource group where the resources will be deployed. Defaults to the resource group of the Key Vault.
-  - `ip_configurations` - (Optional) A map of IP configurations to create on the private endpoint. If not specified the platform will create one. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-    - `name` - The name of the IP configuration.
-    - `private_ip_address` - The private IP address of the IP configuration.
-  DESCRIPTION
-}
+A map of private endpoints to create on the resource. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
-# The PE resource when we are managing the private_dns_zone_group block:
-resource "azurerm_private_endpoint" "this" {
-  for_each                      = { for k, v in var.private_endpoints : k => v if var.private_endpoints_manage_dns_zone_group }
-  name                          = each.value.name != null ? each.value.name : "pep-${var.name}"
-  location                      = each.value.location != null ? each.value.location : var.location
-  resource_group_name           = each.value.resource_group_name != null ? each.value.resource_group_name : var.resource_group_name
-  subnet_id                     = each.value.subnet_resource_id
-  custom_network_interface_name = each.value.network_interface_name
-  tags                          = each.value.tags
-
-  private_service_connection {
-    name                           = each.value.private_service_connection_name != null ? each.value.private_service_connection_name : "pse-${var.name}"
-    private_connection_resource_id = azurerm_key_vault.this.id
-    is_manual_connection           = false
-    subresource_names              = ["MYSERVICE"] # map to each.value.subresource_name if there are multiple services.
-  }
-
-  dynamic "private_dns_zone_group" {
-    for_each = length(each.value.private_dns_zone_resource_ids) > 0 ? ["this"] : []
-
-    content {
-      name                 = each.value.private_dns_zone_group_name
-      private_dns_zone_ids = each.value.private_dns_zone_resource_ids
-    }
-  }
-
-  dynamic "ip_configuration" {
-    for_each = each.value.ip_configurations
-
-    content {
-      name               = ip_configuration.value.name
-      subresource_name   = "MYSERVICE" # map to each.value.subresource_name if there are multiple services.
-      member_name        = "MYSERVICE" # map to each.value.subresource_name if there are multiple services.
-      private_ip_address = ip_configuration.value.private_ip_address
-    }
-  }
-}
-
-
-# Private endpoint application security group associations.
-# We merge the nested maps from private endpoints and application security group associations into a single map.
-locals {
-  private_endpoint_application_security_group_associations = { for assoc in flatten([
-    for pe_k, pe_v in var.private_endpoints : [
-      for asg_k, asg_v in pe_v.application_security_group_associations : {
-        asg_key         = asg_k
-        pe_key          = pe_k
-        asg_resource_id = asg_v
-      }
-    ]
-  ]) : "${assoc.pe_key}-${assoc.asg_key}" => assoc }
+- `name` - (Optional) The name of the private endpoint. One will be generated if not set.
+- `role_assignments` - (Optional) A map of role assignments to create on the private endpoint. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time. See `var.role_assignments` for more information.
+- `lock` - (Optional) The lock level to apply to the private endpoint. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`.
+- `tags` - (Optional) A mapping of tags to assign to the private endpoint.
+- `subnet_resource_id` - The resource ID of the subnet to deploy the private endpoint in.
+- `subresource_name` - The service name of the private endpoint.  Possible value are `blob`, 'dfs', 'file', `queue`, `table`, and `web`.
+- `private_dns_zone_group_name` - (Optional) The name of the private DNS zone group. One will be generated if not set.
+- `private_dns_zone_resource_ids` - (Optional) A set of resource IDs of private DNS zones to associate with the private endpoint. If not set, no zone groups will be created and the private endpoint will not be associated with any private DNS zones. DNS records must be managed external to this module.
+- `application_security_group_resource_ids` - (Optional) A map of resource IDs of application security groups to associate with the private endpoint. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+- `private_service_connection_name` - (Optional) The name of the private service connection. One will be generated if not set.
+- `network_interface_name` - (Optional) The name of the network interface. One will be generated if not set.
+- `location` - (Optional) The Azure location where the resources will be deployed. Defaults to the location of the resource group.
+- `resource_group_name` - (Optional) The resource group where the resources will be deployed. Defaults to the resource group of the resource.
+- `ip_configurations` - (Optional) A map of IP configurations to create on the private endpoint. If not specified the platform will create one. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+  - `name` - The name of the IP configuration.
+  - `private_ip_address` - The private IP address of the IP configuration.
+DESCRIPTION
+  nullable    = false
 }
 
 
