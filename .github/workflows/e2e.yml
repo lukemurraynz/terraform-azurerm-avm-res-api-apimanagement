@@ -43,26 +43,14 @@ jobs:
       - name: Log into Azure
         uses: azure/login@v1
         with:
-         client-id: ${{ secrets.AZURE_CLIENT_ID }}
-         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+         client-id: ${ secrets.AZURE_CLIENT_ID }
+         tenant-id: ${ secrets.AZURE_TENANT_ID }
+         subscription-id: ${ secrets.AZURE_SUBSCRIPTION_ID }
     
       - name: Test example
         shell: bash
         run: |
-          set -e
-           MAX_RETRIES=10
-          RETRY_COUNT=0
-          until [ $RETRY_COUNT -ge $MAX_RETRIES ]
-          do
-            az login --identity --username $AZURE_CLIENT_ID > /dev/null && break
-            RETRY_COUNT=$[$RETRY_COUNT+1]
-            sleep 10
-          done
-          if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
-            echo "Failed to login after $MAX_RETRIES attempts."
-            exit 1
-          fi
+
           export ARM_SUBSCRIPTION_ID= ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           export ARM_TENANT_ID= ${{ secrets.AZURE_TENANT_ID }}
           export ARM_CLIENT_ID= ${{ secrets.AZURE_CLIENT_ID }}
