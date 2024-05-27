@@ -55,7 +55,8 @@ module "test" {
   name                = module.naming.api_management.name_unique
   resource_group_name = azurerm_resource_group.this.name
   publisher_name      = "Your Publisher Name"
-  sku_name            = "Premium_1" # or another valid SKU
+  sku_name            = "Premium_3" # or another valid SKU
   publisher_email     = "publisher@example.com"
   enable_telemetry    = var.enable_telemetry # see variables.tf
-}
+ }
+
