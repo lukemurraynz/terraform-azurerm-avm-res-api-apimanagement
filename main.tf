@@ -13,7 +13,8 @@ resource "azurerm_api_management" "this" {
   public_network_access_enabled = var.public_network_access_enabled
   tags                          = var.tags
   virtual_network_type          = var.virtual_network_type
-  zones                         = var.zones
+  // Enable availability zones only if the SKU is premium, as per Well-Architected Guidelines
+  zones = var.sku_name == "Premium" ? var.zones : null
 
   dynamic "additional_location" {
     for_each = var.additional_location == null ? [] : var.additional_location

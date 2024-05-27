@@ -457,23 +457,23 @@ variable "role_assignments" {
 
 variable "security" {
   type = object({
-    enable_backend_ssl30                                = optional(bool)
-    enable_backend_tls10                                = optional(bool)
-    enable_backend_tls11                                = optional(bool)
-    enable_frontend_ssl30                               = optional(bool)
-    enable_frontend_tls10                               = optional(bool)
-    enable_frontend_tls11                               = optional(bool)
-    tls_ecdhe_ecdsa_with_aes128_cbc_sha_ciphers_enabled = optional(bool)
-    tls_ecdhe_ecdsa_with_aes256_cbc_sha_ciphers_enabled = optional(bool)
-    tls_ecdhe_rsa_with_aes128_cbc_sha_ciphers_enabled   = optional(bool)
-    tls_ecdhe_rsa_with_aes256_cbc_sha_ciphers_enabled   = optional(bool)
-    tls_rsa_with_aes128_cbc_sha256_ciphers_enabled      = optional(bool)
-    tls_rsa_with_aes128_cbc_sha_ciphers_enabled         = optional(bool)
-    tls_rsa_with_aes128_gcm_sha256_ciphers_enabled      = optional(bool)
-    tls_rsa_with_aes256_cbc_sha256_ciphers_enabled      = optional(bool)
-    tls_rsa_with_aes256_cbc_sha_ciphers_enabled         = optional(bool)
-    tls_rsa_with_aes256_gcm_sha384_ciphers_enabled      = optional(bool)
-    triple_des_ciphers_enabled                          = optional(bool)
+    enable_backend_ssl30                                = optional(bool, false)
+    enable_backend_tls10                                = optional(bool, false)
+    enable_backend_tls11                                = optional(bool, false)
+    enable_frontend_ssl30                               = optional(bool, false)
+    enable_frontend_tls10                               = optional(bool, false)
+    enable_frontend_tls11                               = optional(bool, false)
+    tls_ecdhe_ecdsa_with_aes128_cbc_sha_ciphers_enabled = optional(bool, false)
+    tls_ecdhe_ecdsa_with_aes256_cbc_sha_ciphers_enabled = optional(bool, false)
+    tls_ecdhe_rsa_with_aes128_cbc_sha_ciphers_enabled   = optional(bool, false)
+    tls_ecdhe_rsa_with_aes256_cbc_sha_ciphers_enabled   = optional(bool, false)
+    tls_rsa_with_aes128_cbc_sha256_ciphers_enabled      = optional(bool, false)
+    tls_rsa_with_aes128_cbc_sha_ciphers_enabled         = optional(bool, false)
+    tls_rsa_with_aes128_gcm_sha256_ciphers_enabled      = optional(bool, false)
+    tls_rsa_with_aes256_cbc_sha256_ciphers_enabled      = optional(bool, false)
+    tls_rsa_with_aes256_cbc_sha_ciphers_enabled         = optional(bool, false)
+    tls_rsa_with_aes256_gcm_sha384_ciphers_enabled      = optional(bool, false)
+    triple_des_ciphers_enabled                          = optional(bool, false)
   })
   default     = null
   description = <<-EOT
@@ -579,6 +579,6 @@ variable "virtual_network_type" {
 
 variable "zones" {
   type        = set(string)
-  default     = null
-  description = "(Optional) Specifies a list of Availability Zones in which this API Management service should be located."
+  default     = ["1", "2", "3"]
+  description = "(Optional) Specifies a list of Availability Zones in which this API Management service should be located. Defaults to zones 1, 2, and 3, if Premium."
 }
