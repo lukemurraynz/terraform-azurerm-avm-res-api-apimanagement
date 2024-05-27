@@ -46,7 +46,7 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Test example
-        uses: lukemurraynz/terraform-azurerm-avm-res-apimanagement-apimangement/.github/actions/e2e-testexamples@main
+        uses: lukemurraynz/terraform-azurerm-avm-res-apimanagement-apimangement/.github/actions/e2e-getexamples@main
         with:
           example: ${{ matrix.example }}
 
