@@ -58,10 +58,12 @@ module "test" {
   # source             = "Azure/avm-res-apimanagement-apimanegemenet/azurerm"
   # ...
   location            = azurerm_resource_group.this.location
-  name                =  module.naming.api_management.name_unique
+  name                = module.naming.api_management.name_unique
   resource_group_name = azurerm_resource_group.this.name
-
-  enable_telemetry = var.enable_telemetry # see variables.tf
+  publisher_name      = "Your Publisher Name"
+  sku_name            = "Standard_1" # or another valid SKU
+  publisher_email     = "publisher@example.com"
+  enable_telemetry    = var.enable_telemetry # see variables.tf
 }
 ```
 

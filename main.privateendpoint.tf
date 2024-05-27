@@ -1,4 +1,3 @@
-# TODO remove this code & var.private_endpoints if private link is not support.  Note it must be included in this module if it is supported.
 resource "azurerm_private_endpoint" "this_managed_dns_zone_groups" {
   for_each = var.private_endpoints
 
@@ -13,7 +12,7 @@ resource "azurerm_private_endpoint" "this_managed_dns_zone_groups" {
     is_manual_connection           = false
     name                           = each.value.private_service_connection_name != null ? each.value.private_service_connection_name : "pse-${var.name}"
     private_connection_resource_id = azurerm_api_management.this.id
-    subresource_names              = ["TODO subresource name, see https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-overview#private-link-resource"]
+    subresource_names              = ["Gateway"]
   }
   dynamic "ip_configuration" {
     for_each = each.value.ip_configurations
@@ -52,7 +51,7 @@ resource "azurerm_private_endpoint" "this_unmanaged_dns_zone_groups" {
     is_manual_connection           = false
     name                           = each.value.private_service_connection_name != null ? each.value.private_service_connection_name : "pse-${var.name}"
     private_connection_resource_id = azurerm_api_management.this.id
-    subresource_names              = ["TODO subresource name, see https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-overview#private-link-resource"]
+    subresource_names              = ["Gateway"]
   }
   dynamic "ip_configuration" {
     for_each = each.value.ip_configurations

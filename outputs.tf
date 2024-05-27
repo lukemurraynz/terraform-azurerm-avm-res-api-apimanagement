@@ -16,4 +16,3 @@ output "resource_id" {
   description = "This is the full output for the resource."
   value       = azurerm_api_management.this.id
 }
-
