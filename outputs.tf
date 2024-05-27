@@ -22,3 +22,8 @@ output "resource_gateway_url" {
   description = "This is the output for the gateway url."
   value       = azurerm_api_management.this.gateway_url
 }
+
+output "resource_developer_portal_url" {
+  description = "This is the output for the gateway url."
+  value       = azurerm_api_management.this.developer_portal_url
+}
