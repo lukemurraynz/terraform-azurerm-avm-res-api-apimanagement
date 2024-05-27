@@ -20,8 +20,8 @@ resource "azurerm_private_endpoint" "this_managed_dns_zone_groups" {
     content {
       name               = ip_configuration.value.name
       private_ip_address = ip_configuration.value.private_ip_address
-      member_name        = "TODO subresource name"
-      subresource_name   = "TODO subresource name"
+      member_name        = "Gateway"
+      subresource_name   = "Gateway"
     }
   }
   dynamic "private_dns_zone_group" {
