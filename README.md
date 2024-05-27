@@ -24,29 +24,29 @@ Things to do:
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.5)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.5.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.71)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.71.0, < 4.0)
 
-- <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
+- <a name="requirement_random"></a> [random](#requirement\_random) (>= 3.5.0, < 4.0)
 
 ## Providers
 
 The following providers are used by this module:
 
-- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (~> 3.71)
+- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (>= 3.71.0, < 4.0)
 
-- <a name="provider_random"></a> [random](#provider\_random) (~> 3.5)
+- <a name="provider_random"></a> [random](#provider\_random) (>= 3.5.0, < 4.0)
 
 ## Resources
 
 The following resources are used by this module:
 
+- [azurerm_api_management.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/api_management) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_private_endpoint.this_managed_dns_zone_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
 - [azurerm_private_endpoint.this_unmanaged_dns_zone_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
 - [azurerm_private_endpoint_application_security_group_association.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint_application_security_group_association) (resource)
-- [azurerm_resource_group.TODO](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [azurerm_resource_group_template_deployment.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group_template_deployment) (resource)
 - [azurerm_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [random_id.telem](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) (resource)
@@ -68,15 +68,88 @@ Description: The name of the this resource.
 
 Type: `string`
 
+### <a name="input_publisher_email"></a> [publisher\_email](#input\_publisher\_email)
+
+Description: (Required) The email of publisher/company.
+
+Type: `string`
+
+### <a name="input_publisher_name"></a> [publisher\_name](#input\_publisher\_name)
+
+Description: (Required) The name of publisher/company.
+
+Type: `string`
+
 ### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
 
 Description: The resource group where the resources will be deployed.
 
 Type: `string`
 
+### <a name="input_sku_name"></a> [sku\_name](#input\_sku\_name)
+
+Description: (Required) `sku_name` is a string consisting of two parts separated by an underscore(\\_). The first part is the `name`, valid values include: `Consumption`, `Developer`, `Basic`, `Standard` and `Premium`. The second part is the `capacity` (e.g. the number of deployed units of the `sku`), which must be a positive `integer` (e.g. `Developer_1`).
+
+Type: `string`
+
 ## Optional Inputs
 
 The following input variables are optional (have default values):
+
+### <a name="input_additional_location"></a> [additional\_location](#input\_additional\_location)
+
+Description: - `capacity` - (Optional) The number of compute units in this region. Defaults to the capacity of the main region.
+- `gateway_disabled` - (Optional) Only valid for an Api Management service deployed in multiple locations. This can be used to disable the gateway in this additional location.
+- `location` - (Required) The name of the Azure Region in which the API Management Service should be expanded to.
+- `public_ip_address_id` - (Optional) ID of a standard SKU IPv4 Public IP.
+- `zones` - (Optional) A list of availability zones. Changing this forces a new resource to be created.
+
+---
+`virtual_network_configuration` block supports the following:
+- `subnet_id` - (Required) The id of the subnet that will be used for the API Management.
+
+Type:
+
+```hcl
+list(object({
+    capacity             = optional(number)
+    gateway_disabled     = optional(bool)
+    location             = string
+    public_ip_address_id = optional(string)
+    zones                = optional(set(string))
+    virtual_network_configuration = optional(object({
+      subnet_id = string
+    }))
+  }))
+```
+
+Default: `null`
+
+### <a name="input_certificate"></a> [certificate](#input\_certificate)
+
+Description: - `certificate_password` - (Optional) The password for the certificate.
+- `encoded_certificate` - (Required) The Base64 Encoded PFX or Base64 Encoded X.509 Certificate.
+- `store_name` - (Required) The name of the Certificate Store where this certificate should be stored. Possible values are `CertificateAuthority` and `Root`.
+
+Type:
+
+```hcl
+list(object({
+    certificate_password = optional(string)
+    encoded_certificate  = string
+    store_name           = string
+  }))
+```
+
+Default: `null`
+
+### <a name="input_client_certificate_enabled"></a> [client\_certificate\_enabled](#input\_client\_certificate\_enabled)
+
+Description: (Optional) Enforce a client certificate to be presented on each request to the gateway? This is only supported when SKU type is `Consumption`.
+
+Type: `bool`
+
+Default: `null`
 
 ### <a name="input_customer_managed_key"></a> [customer\_managed\_key](#input\_customer\_managed\_key)
 
@@ -97,6 +170,26 @@ object({
     user_assigned_identity = optional(object({
       resource_id = string
     }), null)
+  })
+```
+
+Default: `null`
+
+### <a name="input_delegation"></a> [delegation](#input\_delegation)
+
+Description: - `subscriptions_enabled` - (Optional) Should subscription requests be delegated to an external url? Defaults to `false`.
+- `url` - (Optional) The delegation URL.
+- `user_registration_enabled` - (Optional) Should user registration requests be delegated to an external url? Defaults to `false`.
+- `validation_key` - (Optional) A base64-encoded validation key to validate, that a request is coming from Azure API Management.
+
+Type:
+
+```hcl
+object({
+    subscriptions_enabled     = optional(bool)
+    url                       = optional(string)
+    user_registration_enabled = optional(bool)
+    validation_key            = optional(string)
   })
 ```
 
@@ -146,6 +239,113 @@ Type: `bool`
 
 Default: `true`
 
+### <a name="input_gateway_disabled"></a> [gateway\_disabled](#input\_gateway\_disabled)
+
+Description: (Optional) Disable the gateway in main region? This is only supported when `additional_location` is set.
+
+Type: `bool`
+
+Default: `null`
+
+### <a name="input_hostname_configuration"></a> [hostname\_configuration](#input\_hostname\_configuration)
+
+Description:
+---
+`developer_portal` block supports the following:
+- `certificate` - (Optional) One or more `certificate` blocks (up to 10) as defined below.
+- `certificate_password` -
+- `host_name` -
+- `key_vault_id` -
+- `negotiate_client_certificate` -
+- `ssl_keyvault_identity_client_id` -
+
+---
+`management` block supports the following:
+- `certificate` - (Optional) One or more `certificate` blocks (up to 10) as defined below.
+- `certificate_password` -
+- `host_name` -
+- `key_vault_id` -
+- `negotiate_client_certificate` -
+- `ssl_keyvault_identity_client_id` -
+
+---
+`portal` block supports the following:
+- `certificate` - (Optional) One or more `certificate` blocks (up to 10) as defined below.
+- `certificate_password` -
+- `host_name` -
+- `key_vault_id` -
+- `negotiate_client_certificate` -
+- `ssl_keyvault_identity_client_id` -
+
+---
+`proxy` block supports the following:
+- `certificate` - (Optional) The Base64 Encoded Certificate.
+- `certificate_password` - (Optional) The password associated with the certificate provided above.
+- `default_ssl_binding` - (Optional) Is the certificate associated with this Hostname the Default SSL Certificate? This is used when an SNI header isn't specified by a client. Defaults to `false`.
+- `host_name` - (Required) The Hostname to use for the Management API.
+- `key_vault_id` - (Optional) The ID of the Key Vault Secret containing the SSL Certificate, which must be should be of the type `application/x-pkcs12`.
+- `negotiate_client_certificate` - (Optional) Should Client Certificate Negotiation be enabled for this Hostname? Defaults to `false`.
+- `ssl_keyvault_identity_client_id` - (Optional) The Managed Identity Client ID to use to access the Key Vault. This Identity must be specified in the `identity` block to be used.
+
+---
+`scm` block supports the following:
+- `certificate` - (Optional) One or more `certificate` blocks (up to 10) as defined below.
+- `certificate_password` -
+- `host_name` -
+- `key_vault_id` -
+- `negotiate_client_certificate` -
+- `ssl_keyvault_identity_client_id` -
+
+Type:
+
+```hcl
+object({
+    developer_portal = optional(list(object({
+      certificate                     = optional(string)
+      certificate_password            = optional(string)
+      host_name                       = string
+      key_vault_id                    = optional(string)
+      negotiate_client_certificate    = optional(bool)
+      ssl_keyvault_identity_client_id = optional(string)
+    })))
+    management = optional(list(object({
+      certificate                     = optional(string)
+      certificate_password            = optional(string)
+      host_name                       = string
+      key_vault_id                    = optional(string)
+      negotiate_client_certificate    = optional(bool)
+      ssl_keyvault_identity_client_id = optional(string)
+    })))
+    portal = optional(list(object({
+      certificate                     = optional(string)
+      certificate_password            = optional(string)
+      host_name                       = string
+      key_vault_id                    = optional(string)
+      negotiate_client_certificate    = optional(bool)
+      ssl_keyvault_identity_client_id = optional(string)
+    })))
+    proxy = optional(list(object({
+      certificate                     = optional(string)
+      certificate_password            = optional(string)
+      default_ssl_binding             = optional(bool)
+      host_name                       = string
+      key_vault_id                    = optional(string)
+      negotiate_client_certificate    = optional(bool)
+      ssl_keyvault_identity_client_id = optional(string)
+    })))
+    scm = optional(list(object({
+      certificate                     = optional(string)
+      certificate_password            = optional(string)
+      host_name                       = string
+      key_vault_id                    = optional(string)
+      negotiate_client_certificate    = optional(bool)
+      ssl_keyvault_identity_client_id = optional(string)
+    })))
+  })
+```
+
+Default: `null`
+
 ### <a name="input_lock"></a> [lock](#input\_lock)
 
 Description: Controls the Resource Lock configuration for this resource. The following properties can be specified:
@@ -181,6 +381,38 @@ object({
 ```
 
 Default: `{}`
+
+### <a name="input_min_api_version"></a> [min\_api\_version](#input\_min\_api\_version)
+
+Description: (Optional) The version which the control plane API calls to API Management service are limited with version equal to or newer than.
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_notification_sender_email"></a> [notification\_sender\_email](#input\_notification\_sender\_email)
+
+Description: (Optional) Email address from which the notification will be sent.
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_policy"></a> [policy](#input\_policy)
+
+Description: - `xml_content` - (Optional) The XML Content for this Policy.
+- `xml_link` - (Optional) A link to an API Management Policy XML Document, which must be publicly available.
+
+Type:
+
+```hcl
+list(object({
+    xml_content = string
+    xml_link    = string
+  }))
+```
+
+Default: `null`
 
 ### <a name="input_private_endpoints"></a> [private\_endpoints](#input\_private\_endpoints)
 
@@ -246,6 +478,36 @@ Type: `bool`
 
 Default: `true`
 
+### <a name="input_protocols"></a> [protocols](#input\_protocols)
+
+Description: - `enable_http2` - (Optional) Should HTTP/2 be supported by the API Management Service? Defaults to `false`.
+
+Type:
+
+```hcl
+object({
+    enable_http2 = optional(bool)
+  })
+```
+
+Default: `null`
+
+### <a name="input_public_ip_address_id"></a> [public\_ip\_address\_id](#input\_public\_ip\_address\_id)
+
+Description: (Optional) ID of a standard SKU IPv4 Public IP.
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_public_network_access_enabled"></a> [public\_network\_access\_enabled](#input\_public\_network\_access\_enabled)
+
+Description: (Optional) Is public access to the service allowed? Defaults to `true`.
+
+Type: `bool`
+
+Default: `null`
+
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
 Description: A map of role assignments to create on this resource. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
@@ -275,11 +537,160 @@ map(object({
 
 Default: `{}`
 
+### <a name="input_security"></a> [security](#input\_security)
+
+Description: - `enable_backend_ssl30` - (Optional) Should SSL 3.0 be enabled on the backend of the gateway? Defaults to `false`.
+- `enable_backend_tls10` - (Optional) Should TLS 1.0 be enabled on the backend of the gateway? Defaults to `false`.
+- `enable_backend_tls11` - (Optional) Should TLS 1.1 be enabled on the backend of the gateway? Defaults to `false`.
+- `enable_frontend_ssl30` - (Optional) Should SSL 3.0 be enabled on the frontend of the gateway? Defaults to `false`.
+- `enable_frontend_tls10` - (Optional) Should TLS 1.0 be enabled on the frontend of the gateway? Defaults to `false`.
+- `enable_frontend_tls11` - (Optional) Should TLS 1.1 be enabled on the frontend of the gateway? Defaults to `false`.
+- `tls_ecdhe_ecdsa_with_aes128_cbc_sha_ciphers_enabled` - (Optional) Should the `TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA` cipher be enabled? Defaults to `false`.
+- `tls_ecdhe_ecdsa_with_aes256_cbc_sha_ciphers_enabled` - (Optional) Should the `TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA` cipher be enabled? Defaults to `false`.
+- `tls_ecdhe_rsa_with_aes128_cbc_sha_ciphers_enabled` - (Optional) Should the `TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA` cipher be enabled? Defaults to `false`.
+- `tls_ecdhe_rsa_with_aes256_cbc_sha_ciphers_enabled` - (Optional) Should the `TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA` cipher be enabled? Defaults to `false`.
+- `tls_rsa_with_aes128_cbc_sha256_ciphers_enabled` - (Optional) Should the `TLS_RSA_WITH_AES_128_CBC_SHA256` cipher be enabled? Defaults to `false`.
+- `tls_rsa_with_aes128_cbc_sha_ciphers_enabled` - (Optional) Should the `TLS_RSA_WITH_AES_128_CBC_SHA` cipher be enabled? Defaults to `false`.
+- `tls_rsa_with_aes128_gcm_sha256_ciphers_enabled` - (Optional) Should the `TLS_RSA_WITH_AES_128_GCM_SHA256` cipher be enabled? Defaults to `false`.
+- `tls_rsa_with_aes256_cbc_sha256_ciphers_enabled` - (Optional) Should the `TLS_RSA_WITH_AES_256_CBC_SHA256` cipher be enabled? Defaults to `false`.
+- `tls_rsa_with_aes256_cbc_sha_ciphers_enabled` - (Optional) Should the `TLS_RSA_WITH_AES_256_CBC_SHA` cipher be enabled? Defaults to `false`.
+- `tls_rsa_with_aes256_gcm_sha384_ciphers_enabled` - (Optional) Should the `TLS_RSA_WITH_AES_256_GCM_SHA384` cipher be enabled? Defaults to `false`.
+- `triple_des_ciphers_enabled` - (Optional) Should the `TLS_RSA_WITH_3DES_EDE_CBC_SHA` cipher be enabled for alL TLS versions (1.0, 1.1 and 1.2)?
+
+Type:
+
+```hcl
+object({
+    enable_backend_ssl30                                = optional(bool)
+    enable_backend_tls10                                = optional(bool)
+    enable_backend_tls11                                = optional(bool)
+    enable_frontend_ssl30                               = optional(bool)
+    enable_frontend_tls10                               = optional(bool)
+    enable_frontend_tls11                               = optional(bool)
+    tls_ecdhe_ecdsa_with_aes128_cbc_sha_ciphers_enabled = optional(bool)
+    tls_ecdhe_ecdsa_with_aes256_cbc_sha_ciphers_enabled = optional(bool)
+    tls_ecdhe_rsa_with_aes128_cbc_sha_ciphers_enabled   = optional(bool)
+    tls_ecdhe_rsa_with_aes256_cbc_sha_ciphers_enabled   = optional(bool)
+    tls_rsa_with_aes128_cbc_sha256_ciphers_enabled      = optional(bool)
+    tls_rsa_with_aes128_cbc_sha_ciphers_enabled         = optional(bool)
+    tls_rsa_with_aes128_gcm_sha256_ciphers_enabled      = optional(bool)
+    tls_rsa_with_aes256_cbc_sha256_ciphers_enabled      = optional(bool)
+    tls_rsa_with_aes256_cbc_sha_ciphers_enabled         = optional(bool)
+    tls_rsa_with_aes256_gcm_sha384_ciphers_enabled      = optional(bool)
+    triple_des_ciphers_enabled                          = optional(bool)
+  })
+```
+
+Default: `null`
+
+### <a name="input_sign_in"></a> [sign\_in](#input\_sign\_in)
+
+Description: - `enabled` - (Required) Should anonymous users be redirected to the sign in page?
+
+Type:
+
+```hcl
+object({
+    enabled = bool
+  })
+```
+
+Default: `null`
+
+### <a name="input_sign_up"></a> [sign\_up](#input\_sign\_up)
+
+Description: - `enabled` - (Required) Can users sign up on the development portal?
+
+---
+`terms_of_service` block supports the following:
+- `consent_required` - (Required) Should the user be asked for consent during sign up?
+- `enabled` - (Required) Should Terms of Service be displayed during sign up?.
+- `text` - (Optional) The Terms of Service which users are required to agree to in order to sign up.
+
+Type:
+
+```hcl
+object({
+    enabled = bool
+    terms_of_service = object({
+      consent_required = bool
+      enabled          = bool
+      text             = optional(string)
+    })
+  })
+```
+
+Default: `null`
+
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
 Description: (Optional) Tags of the resource.
 
 Type: `map(string)`
+
+Default: `null`
+
+### <a name="input_tenant_access"></a> [tenant\_access](#input\_tenant\_access)
+
+Description: - `enabled` - (Required) Should the access to the management API be enabled?
+
+Type:
+
+```hcl
+object({
+    enabled = bool
+  })
+```
+
+Default: `null`
+
+### <a name="input_timeouts"></a> [timeouts](#input\_timeouts)
+
+Description: - `create` - (Defaults to 3 hours) Used when creating the API Management Service.
+- `delete` - (Defaults to 3 hours) Used when deleting the API Management Service.
+- `read` - (Defaults to 5 minutes) Used when retrieving the API Management Service.
+- `update` - (Defaults to 3 hours) Used when updating the API Management Service.
+
+Type:
+
+```hcl
+object({
+    create = optional(string)
+    delete = optional(string)
+    read   = optional(string)
+    update = optional(string)
+  })
+```
+
+Default: `null`
+
+### <a name="input_virtual_network_configuration"></a> [virtual\_network\_configuration](#input\_virtual\_network\_configuration)
+
+Description: - `subnet_id` - (Required) The id of the subnet that will be used for the API Management.
+
+Type:
+
+```hcl
+object({
+    subnet_id = string
+  })
+```
+
+Default: `null`
+
+### <a name="input_virtual_network_type"></a> [virtual\_network\_type](#input\_virtual\_network\_type)
+
+Description: (Optional) The type of virtual network you want to use, valid values include: `None`, `External`, `Internal`. Defaults to `None`.
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_zones"></a> [zones](#input\_zones)
+
+Description: (Optional) Specifies a list of Availability Zones in which this API Management service should be located.
+
+Type: `set(string)`
 
 Default: `null`
 
