@@ -17,3 +17,8 @@ output "resource_id" {
   description = "This is the full output for the resource."
   value       = azurerm_api_management.this.id
 }
+
+output "resource_gateway_url" {
+  description = "This is the output for the gateway url."
+  value       = azurerm_api_management.this.gateway_url
+}
