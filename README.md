@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
-# terraform-azurerm-avm-template
+# terraform-azurerm-avm-res-apimanagement-apimanagement
 
-This is a template repo for Terraform Azure Verified Modules.
+This is a module that deploys Azure API Management.
 
 <!-- markdownlint-disable MD033 -->
 ## Requirements
